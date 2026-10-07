@@ -146,13 +146,29 @@ test("topic cases allow exactly one list_topics call and no other tool", () => {
   const { pm } = fakePm();
   const lib = createWarpLib(pm);
   const toolFailure = /tool calls, want at most|no use for|did not call/;
-  for (const id of ["topics-overview", "topics-past-hour", "topics-trend", "topics-drill-down", "topics-people"]) {
+  for (const id of ["topics-overview", "topics-trend", "topics-drill-down", "topics-people"]) {
     const { expect } = caseFromCollection(id);
     const tools = (calls) => lib.evaluate(answered("x", calls), expect).filter((f) => toolFailure.test(f));
     assert.deepStrictEqual(tools(["list_topics"]), [], `${id}: one list_topics call`);
     assert.notDeepStrictEqual(tools(["list_topics", "list_topics"]), [], `${id}: a second list_topics call`);
     assert.notDeepStrictEqual(tools(["list_topics", { name: "query_logs", failed: true }]), [], `${id}: a failed query_logs call`);
     assert.notDeepStrictEqual(tools([]), [], `${id}: no list_topics call`);
+  }
+});
+
+// A survey scoped to a window or a person is answered from one query_logs
+// sample, never from list_topics, and says it is a sample.
+test("scoped survey cases take the sample, say so, and never call list_topics", () => {
+  const { pm } = fakePm();
+  const lib = createWarpLib(pm);
+  const sample = { name: "query_logs", arguments: '{"include_content": true, "limit": 25}' };
+  const disclaimer = "Mostly debugging. This is based on a sample of 25 of 1,204 requests and is not representative of the entire traffic.";
+  for (const id of ["content-themes", "content-themes-user"]) {
+    const { expect } = caseFromCollection(id);
+    assert.deepStrictEqual(lib.evaluate(answered(disclaimer, ["describe_filter_space", sample]), expect), [], `${id}: one sample with the sentence`);
+    assert.notDeepStrictEqual(lib.evaluate(answered(disclaimer, ["list_topics", sample]), expect), [], `${id}: list_topics`);
+    assert.notDeepStrictEqual(lib.evaluate(answered("Mostly debugging.", [sample]), expect), [], `${id}: no sample sentence`);
+    assert.notDeepStrictEqual(lib.evaluate(answered(disclaimer, [{ name: "query_logs", arguments: '{"limit": 25}' }]), expect), [], `${id}: no content`);
   }
 });
 
