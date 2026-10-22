@@ -774,3 +774,18 @@ func TestBifrostContextFromContext(t *testing.T) {
 		}
 	})
 }
+
+// BenchmarkStreamCommitWatchArmDisarm is the per-stream-attempt cost the watch adds: one arm
+// before the provider call, one ready on the attempt's committing chunk, and one disarm once
+// the first-chunk check settles.
+func BenchmarkStreamCommitWatchArmDisarm(b *testing.B) {
+	ctx := NewBifrostContext(context.Background(), NoDeadline)
+	ctx.SetValue(BifrostContextKeyRequestID, "req")
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		ctx.ArmStreamCommitWatch()
+		ctx.ReadyStreamCommitWatch()
+		ctx.DisarmStreamCommitWatch()
+	}
+}
