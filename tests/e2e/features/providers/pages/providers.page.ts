@@ -583,7 +583,7 @@ export class ProvidersPage extends BasePage {
       cohere: 'Cohere',
       bedrock: 'AWS Bedrock',
       typesafe: 'TypeSafe',
-      generic: 'generic',
+      generic: 'Generic HTTP API (passthrough)',
     }
     return labels[type] || type
   }
