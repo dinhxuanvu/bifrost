@@ -1,5 +1,6 @@
 import type { APIRequestContext } from "@playwright/test";
 import { expect, test } from "../../core/fixtures/base.fixture";
+import { fillSelect } from "../../core/utils/test-helpers";
 import {
   createCustomProviderData,
   createProviderKeyData,
@@ -444,6 +445,12 @@ test.describe("Providers", () => {
       // the upstream auth section is.
       await expect(providersPage.genericAuthSection).toBeVisible();
       await expect(page.getByTestId("allowed-request-switch-chat_completion")).toHaveCount(0);
+
+      // Moving the format off generic brings the grid back with its defaults on, not all off.
+      await fillSelect(page, '[data-testid="base-provider-select"]', "OpenAI");
+      await expect(page.getByTestId("allowed-request-switch-chat_completion")).toBeChecked();
+      await fillSelect(page, '[data-testid="base-provider-select"]', "generic");
+      await expect(providersPage.genericAuthSection).toBeVisible();
 
       await providersPage.saveCustomProvider();
 
