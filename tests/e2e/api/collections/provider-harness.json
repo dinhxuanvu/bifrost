@@ -277730,6 +277730,61 @@
               ]
             }
           }
+        },
+        {
+          "name": "262.21 POST /passthrough/generic_echo_units/post with stream:true - a caller's stream flag does not select the streaming relay: the reply is buffered and the pages are billed (generic passthrough)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// generic_echo_units has no detect_from_body, so \"stream\": true in the body is just another field: the buffered",
+                  "// handler serves the call (no X-Accel-Buffering), the echoed pages are read, and the row costs 7 x 0.001 + 0.01.",
+                  "// Had the flag selected the streaming relay, the non-SSE reply would be forwarded unread and only the fee billed.",
+                  "pm.test('generic relay: request relayed', function () { pm.expect(pm.response.code, 'failed: ' + pm.response.text().slice(0, 600)).to.eql(200); });",
+                  "pm.test('generic relay: buffered handler served it', function () { pm.expect(pm.response.headers.get('x-accel-buffering'), 'x-accel-buffering must be absent').to.not.eql('no'); });",
+                  "var reqId = pm.response.headers.get('x-bifrost-request-id');",
+                  "function checkLog(attempt) {",
+                  "  pm.sendRequest({ url: pm.variables.get('baseUrl') + '/api/logs/' + reqId, method: 'GET' }, function (err, res) {",
+                  "    var row = (!err && res.code === 200) ? res.json() : null;",
+                  "    if (row && row.passthrough_response_body !== undefined && row.cost !== undefined && row.cost !== null) {",
+                  "      pm.test('generic relay: response-side pages still billed', function () { pm.expect(row.cost, JSON.stringify({cost: row.cost})).to.be.closeTo(0.017, 1e-6); });",
+                  "      return;",
+                  "    }",
+                  "    if (attempt < 10) { setTimeout(function () { checkLog(attempt + 1); }, 1000); return; }",
+                  "    pm.test('generic relay: log row with cost appeared', function () { pm.expect.fail('log ' + reqId + ' has no cost after 10 reads: ' + (err ? String(err) : (res.code + ' ' + res.text()))); });",
+                  "  });",
+                  "}",
+                  "checkLog(0);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pages\": 7,\n  \"stream\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/passthrough/generic_echo_units/post",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "passthrough",
+                "generic_echo_units",
+                "post"
+              ]
+            }
+          }
         }
       ]
     }

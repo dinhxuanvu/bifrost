@@ -612,6 +612,7 @@ export interface GenericUsageConfig {
 export interface GenericStreamingConfig {
 	paths?: string[];
 	detect_from_accept_header?: boolean;
+	detect_from_body?: boolean;
 }
 
 export type GenericRouteMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD";

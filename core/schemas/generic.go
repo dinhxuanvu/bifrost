@@ -84,6 +84,7 @@ type GenericUsageConfig struct {
 type GenericStreamingConfig struct {
 	Paths                  []string `json:"paths,omitempty"`           // route globs that always stream
 	DetectFromAcceptHeader bool     `json:"detect_from_accept_header"` // Accept: text/event-stream selects streaming
+	DetectFromBody         bool     `json:"detect_from_body"`          // "stream": true in a JSON body, or ?stream=true on a GET, selects streaming
 }
 
 // GenericRouteConfig overrides provider defaults for one upstream operation.

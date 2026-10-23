@@ -1216,6 +1216,7 @@ export const genericProviderConfigSchema = z.object({
 		.object({
 			paths: z.array(genericRouteGlob).optional(),
 			detect_from_accept_header: z.boolean().optional(),
+			detect_from_body: z.boolean().optional(),
 		})
 		.optional(),
 	routes: z.array(genericRouteConfigSchema).optional(),
